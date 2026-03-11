@@ -1,0 +1,21 @@
+﻿# Python
+__pycache__/
+*.py[cod]
+*.pth
+*.pt
+.env
+venv/
+.venv/
+
+# Node
+node_modules/
+dist/
+.env.local
+
+# Models (too large for git)
+signed_models/*.pt
+signed_models/*.pth
+
+# IDE
+.vscode/
+.idea/
