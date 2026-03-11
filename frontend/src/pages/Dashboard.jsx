@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { Shield, CheckCircle, XCircle, Activity, Lock, GitBranch, Key, AlertTriangle } from 'lucide-react'
 import axios from 'axios'
 
-const API = 'http://localhost:8000'
+import config from '../config.js'
+const API = config.API
 
 function StatCard({ label, value, sub, accent = 'green', icon: Icon }) {
   const colors = {

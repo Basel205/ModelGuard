@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { GitBranch, CheckCircle, XCircle, Search } from 'lucide-react'
 import axios from 'axios'
 
-const API = 'http://localhost:8000'
+import config from '../config.js'
+const API = config.API
 
 export default function MerklePage() {
   const [merkle,   setMerkle]   = useState(null)

@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { Key, CheckCircle, Lock, Unlock } from 'lucide-react'
 import axios from 'axios'
 
-const API = 'http://localhost:8000'
+import config from '../config.js'
+const API = config.API
 
 export default function ShamirPage() {
   const [secret,  setSecret]  = useState('ModelGuard secret approval')

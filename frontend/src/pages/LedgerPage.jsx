@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { BookOpen, CheckCircle, XCircle, RefreshCw, Shield, Zap, AlertTriangle } from 'lucide-react'
 import axios from 'axios'
 
-const API = 'http://localhost:8000'
+import config from '../config.js'
+const API = config.API
 
 const EVENT_STYLES = {
   SIGNED:           { color: 'var(--accent-green)',  badge: 'badge-green', icon: Shield },

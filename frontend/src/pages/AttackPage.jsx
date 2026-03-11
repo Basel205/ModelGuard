@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { Zap, Shield, AlertTriangle, CheckCircle, XCircle } from 'lucide-react'
 import axios from 'axios'
 
-const API = 'http://localhost:8000'
+import config from '../config.js'
+const API = config.API
 
 const ATTACKS = [
   {
