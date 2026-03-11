@@ -8,6 +8,18 @@ ModelGuard introduces a cryptographic enforcement layer that guarantees an AI mo
 
 ---
 
+## Live Demo
+
+| | Link |
+|---|---|
+| **Frontend** | [model-guard-zeta.vercel.app](https://model-guard-zeta.vercel.app) |
+| **Backend API** | [modelguard.onrender.com](https://modelguard.onrender.com) |
+| **API Docs** | [modelguard.onrender.com/docs](https://modelguard.onrender.com/docs) |
+
+> **Note:** Backend is hosted on Render free tier — first request may take 30-50 seconds to wake up if inactive.
+
+---
+
 ## The Problem
 
 AI frameworks like PyTorch load models with zero verification:
