@@ -1,0 +1,218 @@
+[
+  {
+    "entry_id": "10275b5c-70ee-4e9a-92dd-e0dd6df5e9b2",
+    "event_type": "SIGNED",
+    "model_name": "mnist_classifier",
+    "model_hash": "b832b2d14b80fd20312ac079cf691ee361dc97411dd0e6b9744bb3634b23e6dc",
+    "merkle_root": "4d0c4bde7342f03a0dd4d6d3a36e9a3ef10965273605dfac7c6085a901568bd6",
+    "signed_by": [
+      "alice",
+      "bob"
+    ],
+    "artifact_id": "3f3e78b3-ca42-4760-a526-0aaf900c852a",
+    "prev_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+    "timestamp": "2026-03-11T10:35:02Z",
+    "extra": {
+      "version": "1.0.0"
+    },
+    "entry_hash": "0f616ad6fd28022dc773dfc20718dc57a56c51efb8392bdff500487b5ecb06a4"
+  },
+  {
+    "entry_id": "9baae056-4ce8-4417-992f-49f10c4fab35",
+    "event_type": "VERIFIED",
+    "model_name": "mnist_classifier",
+    "model_hash": "b832b2d14b80fd20312ac079cf691ee361dc97411dd0e6b9744bb3634b23e6dc",
+    "merkle_root": "4d0c4bde7342f03a0dd4d6d3a36e9a3ef10965273605dfac7c6085a901568bd6",
+    "signed_by": [
+      "alice",
+      "bob"
+    ],
+    "artifact_id": "3f3e78b3-ca42-4760-a526-0aaf900c852a",
+    "prev_hash": "0f616ad6fd28022dc773dfc20718dc57a56c51efb8392bdff500487b5ecb06a4",
+    "timestamp": "2026-03-11T10:54:28Z",
+    "extra": {
+      "reason": "Model verified successfully \u2014 all checks passed",
+      "success": true
+    },
+    "entry_hash": "bfb2cc90b7aff3a74063a2fe452cdcc48c1878809c8fd2753c889a1c37f6f003"
+  },
+  {
+    "entry_id": "892f4afd-9ad8-4117-aeb5-9d381df5762a",
+    "event_type": "ATTACK_SIMULATED",
+    "model_name": "mnist_classifier",
+    "model_hash": "b832b2d14b80fd20312ac079cf691ee361dc97411dd0e6b9744bb3634b23e6dc",
+    "merkle_root": "4d0c4bde7342f03a0dd4d6d3a36e9a3ef10965273605dfac7c6085a901568bd6",
+    "signed_by": [],
+    "artifact_id": "3f3e78b3-ca42-4760-a526-0aaf900c852a",
+    "prev_hash": "bfb2cc90b7aff3a74063a2fe452cdcc48c1878809c8fd2753c889a1c37f6f003",
+    "timestamp": "2026-03-11T10:55:00Z",
+    "extra": {
+      "attack_type": "modify_weights",
+      "detected": true
+    },
+    "entry_hash": "af66cc9d536ea250a1ea9cfbb13aed9eff8afefbda36c300dcce33d38831b420"
+  },
+  {
+    "entry_id": "069b5670-b4fe-4b62-bc1d-f3c3d5b60c72",
+    "event_type": "ATTACK_SIMULATED",
+    "model_name": "mnist_classifier",
+    "model_hash": "b832b2d14b80fd20312ac079cf691ee361dc97411dd0e6b9744bb3634b23e6dc",
+    "merkle_root": "4d0c4bde7342f03a0dd4d6d3a36e9a3ef10965273605dfac7c6085a901568bd6",
+    "signed_by": [],
+    "artifact_id": "3f3e78b3-ca42-4760-a526-0aaf900c852a",
+    "prev_hash": "af66cc9d536ea250a1ea9cfbb13aed9eff8afefbda36c300dcce33d38831b420",
+    "timestamp": "2026-03-11T10:55:07Z",
+    "extra": {
+      "attack_type": "replace_model",
+      "detected": true
+    },
+    "entry_hash": "a116e093e7b899826540b2e16364074d3c6faa23a46aef8e94c5a5789fa6bf0b"
+  },
+  {
+    "entry_id": "b078c0eb-dd11-4aa2-bef5-d6329060c18e",
+    "event_type": "ATTACK_SIMULATED",
+    "model_name": "mnist_classifier",
+    "model_hash": "b832b2d14b80fd20312ac079cf691ee361dc97411dd0e6b9744bb3634b23e6dc",
+    "merkle_root": "4d0c4bde7342f03a0dd4d6d3a36e9a3ef10965273605dfac7c6085a901568bd6",
+    "signed_by": [],
+    "artifact_id": "3f3e78b3-ca42-4760-a526-0aaf900c852a",
+    "prev_hash": "a116e093e7b899826540b2e16364074d3c6faa23a46aef8e94c5a5789fa6bf0b",
+    "timestamp": "2026-03-11T10:55:09Z",
+    "extra": {
+      "attack_type": "unsigned",
+      "detected": true
+    },
+    "entry_hash": "60967bc0517bbf99e332ccc750917b9b5cf682113945764ecb66e4fd9f5b9697"
+  },
+  {
+    "entry_id": "48bcfdf5-9713-4367-bd04-abb2c82884c3",
+    "event_type": "ATTACK_SIMULATED",
+    "model_name": "mnist_classifier",
+    "model_hash": "b832b2d14b80fd20312ac079cf691ee361dc97411dd0e6b9744bb3634b23e6dc",
+    "merkle_root": "4d0c4bde7342f03a0dd4d6d3a36e9a3ef10965273605dfac7c6085a901568bd6",
+    "signed_by": [],
+    "artifact_id": "3f3e78b3-ca42-4760-a526-0aaf900c852a",
+    "prev_hash": "60967bc0517bbf99e332ccc750917b9b5cf682113945764ecb66e4fd9f5b9697",
+    "timestamp": "2026-03-11T10:55:15Z",
+    "extra": {
+      "attack_type": "downgrade",
+      "detected": true
+    },
+    "entry_hash": "1436dd8932238fe27e8c81b5d23037556e278f5afad9a3f7da2bcde188bda693"
+  },
+  {
+    "entry_id": "79a79fda-f5d7-4b50-9a23-8fa9633ed729",
+    "event_type": "ATTACK_SIMULATED",
+    "model_name": "mnist_classifier",
+    "model_hash": "b832b2d14b80fd20312ac079cf691ee361dc97411dd0e6b9744bb3634b23e6dc",
+    "merkle_root": "4d0c4bde7342f03a0dd4d6d3a36e9a3ef10965273605dfac7c6085a901568bd6",
+    "signed_by": [],
+    "artifact_id": "3f3e78b3-ca42-4760-a526-0aaf900c852a",
+    "prev_hash": "1436dd8932238fe27e8c81b5d23037556e278f5afad9a3f7da2bcde188bda693",
+    "timestamp": "2026-03-11T10:57:28Z",
+    "extra": {
+      "attack_type": "modify_weights",
+      "detected": true
+    },
+    "entry_hash": "cdf0d4a9379fbcc7fb9dae4509b6438fda4a009a6ce7cc41187267d8991cdbaf"
+  },
+  {
+    "entry_id": "67e5b9fd-ac49-4855-b5a1-0dac1fe05778",
+    "event_type": "ATTACK_SIMULATED",
+    "model_name": "mnist_classifier",
+    "model_hash": "b832b2d14b80fd20312ac079cf691ee361dc97411dd0e6b9744bb3634b23e6dc",
+    "merkle_root": "4d0c4bde7342f03a0dd4d6d3a36e9a3ef10965273605dfac7c6085a901568bd6",
+    "signed_by": [],
+    "artifact_id": "3f3e78b3-ca42-4760-a526-0aaf900c852a",
+    "prev_hash": "cdf0d4a9379fbcc7fb9dae4509b6438fda4a009a6ce7cc41187267d8991cdbaf",
+    "timestamp": "2026-03-11T10:57:30Z",
+    "extra": {
+      "attack_type": "replace_model",
+      "detected": true
+    },
+    "entry_hash": "e541eb3db31c8ef37d423d5b2426334841fdf0301c9ac41cff6d51863cad77c3"
+  },
+  {
+    "entry_id": "62d2366e-9008-44db-ac30-671080a88419",
+    "event_type": "ATTACK_SIMULATED",
+    "model_name": "mnist_classifier",
+    "model_hash": "b832b2d14b80fd20312ac079cf691ee361dc97411dd0e6b9744bb3634b23e6dc",
+    "merkle_root": "4d0c4bde7342f03a0dd4d6d3a36e9a3ef10965273605dfac7c6085a901568bd6",
+    "signed_by": [],
+    "artifact_id": "3f3e78b3-ca42-4760-a526-0aaf900c852a",
+    "prev_hash": "e541eb3db31c8ef37d423d5b2426334841fdf0301c9ac41cff6d51863cad77c3",
+    "timestamp": "2026-03-11T10:57:30Z",
+    "extra": {
+      "attack_type": "downgrade",
+      "detected": true
+    },
+    "entry_hash": "83b839ba2731b79b6d0cda8a728e33c247e7481f5584c8073d646c063384b548"
+  },
+  {
+    "entry_id": "83545374-7eec-42d3-8082-8e3065a7c0b2",
+    "event_type": "ATTACK_SIMULATED",
+    "model_name": "mnist_classifier",
+    "model_hash": "b832b2d14b80fd20312ac079cf691ee361dc97411dd0e6b9744bb3634b23e6dc",
+    "merkle_root": "4d0c4bde7342f03a0dd4d6d3a36e9a3ef10965273605dfac7c6085a901568bd6",
+    "signed_by": [],
+    "artifact_id": "3f3e78b3-ca42-4760-a526-0aaf900c852a",
+    "prev_hash": "83b839ba2731b79b6d0cda8a728e33c247e7481f5584c8073d646c063384b548",
+    "timestamp": "2026-03-11T10:57:31Z",
+    "extra": {
+      "attack_type": "unsigned",
+      "detected": true
+    },
+    "entry_hash": "ebbb3dd546998ee98934577aa98500598da39285fd3564fff6c01b75210ea858"
+  },
+  {
+    "entry_id": "1bb5352a-4f10-4a19-93f9-788d41d33919",
+    "event_type": "VERIFIED",
+    "model_name": "mnist_classifier",
+    "model_hash": "b832b2d14b80fd20312ac079cf691ee361dc97411dd0e6b9744bb3634b23e6dc",
+    "merkle_root": "4d0c4bde7342f03a0dd4d6d3a36e9a3ef10965273605dfac7c6085a901568bd6",
+    "signed_by": [
+      "alice",
+      "bob"
+    ],
+    "artifact_id": "3f3e78b3-ca42-4760-a526-0aaf900c852a",
+    "prev_hash": "ebbb3dd546998ee98934577aa98500598da39285fd3564fff6c01b75210ea858",
+    "timestamp": "2026-03-11T10:58:54Z",
+    "extra": {
+      "reason": "Model verified successfully \u2014 all checks passed",
+      "success": true
+    },
+    "entry_hash": "a00967cd412ea7aac2390261a61a1a8a7e65c3b21c9c8d8e6416dda787e3a48e"
+  },
+  {
+    "entry_id": "5e4e8c36-ad98-4344-8ec1-6fbdae7ac219",
+    "event_type": "ATTACK_SIMULATED",
+    "model_name": "mnist_classifier",
+    "model_hash": "b832b2d14b80fd20312ac079cf691ee361dc97411dd0e6b9744bb3634b23e6dc",
+    "merkle_root": "4d0c4bde7342f03a0dd4d6d3a36e9a3ef10965273605dfac7c6085a901568bd6",
+    "signed_by": [],
+    "artifact_id": "3f3e78b3-ca42-4760-a526-0aaf900c852a",
+    "prev_hash": "a00967cd412ea7aac2390261a61a1a8a7e65c3b21c9c8d8e6416dda787e3a48e",
+    "timestamp": "2026-03-11T10:59:53Z",
+    "extra": {
+      "attack_type": "modify_weights",
+      "detected": true
+    },
+    "entry_hash": "d4a8f76ff1794b8f5c5b118cfd01f5bfb24e6eccd64a83669f5ddef7e796b611"
+  },
+  {
+    "entry_id": "82857f5d-e8a1-436c-b45d-ed2b8f33b6c1",
+    "event_type": "ATTACK_SIMULATED",
+    "model_name": "mnist_classifier",
+    "model_hash": "b832b2d14b80fd20312ac079cf691ee361dc97411dd0e6b9744bb3634b23e6dc",
+    "merkle_root": "4d0c4bde7342f03a0dd4d6d3a36e9a3ef10965273605dfac7c6085a901568bd6",
+    "signed_by": [],
+    "artifact_id": "3f3e78b3-ca42-4760-a526-0aaf900c852a",
+    "prev_hash": "d4a8f76ff1794b8f5c5b118cfd01f5bfb24e6eccd64a83669f5ddef7e796b611",
+    "timestamp": "2026-03-11T11:00:08Z",
+    "extra": {
+      "attack_type": "downgrade",
+      "detected": true
+    },
+    "entry_hash": "8a40fb3d21ef5e98d201590290163edc09eaede42a603db70384e88f53c7d178"
+  }
+]

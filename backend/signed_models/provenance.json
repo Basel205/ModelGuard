@@ -1,0 +1,17 @@
+{
+  "3f3e78b3-ca42-4760-a526-0aaf900c852a": {
+    "artifact_id": "3f3e78b3-ca42-4760-a526-0aaf900c852a",
+    "model_name": "mnist_classifier",
+    "version": "1.0.0",
+    "model_hash": "b832b2d14b80fd20312ac079cf691ee361dc97411dd0e6b9744bb3634b23e6dc",
+    "merkle_root": "4d0c4bde7342f03a0dd4d6d3a36e9a3ef10965273605dfac7c6085a901568bd6",
+    "dataset_name": "MNIST",
+    "signed_by": [
+      "alice",
+      "bob"
+    ],
+    "timestamp": "2026-03-11T10:35:02Z",
+    "threshold": "2-of-3",
+    "notes": null
+  }
+}
