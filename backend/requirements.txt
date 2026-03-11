@@ -8,32 +8,3 @@ python-multipart
 blake3
 pytest
 python-dotenv
-```
-
----
-
-## Status Tracker
-
-Here's everything we're building and where we are:
-```
-backend/crypto/
-  ✅ merkle.py        — done
-  ✅ threshold.py     — done
-  ⬜ hasher.py        — next
-  ⬜ signer.py
-
-backend/core/
-  ⬜ loader.py
-  ⬜ policy.py
-  ⬜ ledger.py
-  ⬜ provenance.py
-
-backend/models/
-  ⬜ mnist_model.py
-  ⬜ train.py
-
-backend/api/
-  ⬜ main.py
-
-frontend/
-  ⬜ all React components
