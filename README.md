@@ -85,6 +85,19 @@ ModelGuard detects and blocks all four attack scenarios:
 | Unsigned Model | Policy engine — no signatures | BLOCKED |
 | Version Downgrade | Policy engine — minimum version | BLOCKED |
 
+### How Attacks Are Detected — Technical Detail
+
+Each attack button triggers a real cryptographic verification failure on the server. Nothing is permanently modified — attacks run in memory against a copy of the model.
+
+**Modify Weights** — The server deep-copies the trained model's weight tensors and adds large values to specific weights (`conv1.weight[0] += 999.0`). The full verification pipeline then runs against this corrupted copy. The BLAKE3 hash of the weights no longer matches the signed hash in the artifact. The Merkle tree detects exactly which chunks changed. Both checks fail and execution is blocked. The UI shows the exact corrupted layer names and dirty chunk indices.
+
+**Replace Model** — A freshly initialized `MNISTClassifier()` with random weights is instantiated and verified against the real signed artifact. Since the weights are completely different, the hash and Merkle root both fail immediately.
+
+**Unsigned Model** — A fake artifact is constructed with empty signature blocks and run through the policy engine. Two policy rules fire: `[REQUIRE_SIGNED]` because no signature block exists, and `[MINIMUM_SIGNERS]` because 0 < 2 required signers. Execution is blocked before cryptographic verification even runs.
+
+**Version Downgrade** — The real artifact's version field is changed to `0.0.1` and evaluated against a policy requiring minimum version `1.0.0`. The policy engine's version comparator parses both as tuples `(0,0,1) < (1,0,0)` and blocks execution.
+
+All four attack attempts are recorded in the tamper-evident ledger with timestamps and detection reasons.
 ---
 
 ## Merkle Tree Visualizer
