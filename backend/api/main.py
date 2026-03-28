@@ -155,6 +155,7 @@ class SignRequest(BaseModel):
 class AttackRequest(BaseModel):
     attack_type: str   # "modify_weights", "replace_model", "unsigned", "downgrade"
     intensity:   float = 1.0   # how severe the attack is (1.0 = default)
+    user_id:     str   = "anonymous"
 
 
 class ShamirDemoRequest(BaseModel):
@@ -385,7 +386,7 @@ def simulate_attack(req: AttackRequest):
         merkle_root = artifact["metadata"]["merkle_root"],
         signed_by   = [],
         artifact_id = artifact["metadata"]["artifact_id"],
-        extra       = {"attack_type": attack_type, "detected": result.get("detected")},
+        extra       = {"attack_type": attack_type, "detected": result.get("detected"), "user_id": req.user_id},
     )
 
     return result
@@ -464,8 +465,10 @@ def shamir_demo(req: ShamirDemoRequest):
 def verify_single_chunk(chunk_index: int):
     """
     Verify a single chunk via O(log N) Merkle proof.
-    Used to demonstrate per-chunk verification in the UI.
+    Returns the full proof path for frontend animation.
     """
+    from backend.crypto.merkle import MerkleTree, chunk_weights
+
     signer   = get_signer()
     artifact = get_artifact()
     model    = get_model()
@@ -478,6 +481,10 @@ def verify_single_chunk(chunk_index: int):
             detail      = f"Chunk index {chunk_index} out of range (max {total_chunks - 1})"
         )
 
+    # Get proof path from stored tree
+    stored_tree = MerkleTree.from_dict(artifact["merkle_tree"])
+    proof_path  = stored_tree.get_proof(chunk_index)
+
     ok, reason = signer.verify_chunk_only(
         model.state_dict(), artifact, chunk_index
     )
@@ -488,7 +495,238 @@ def verify_single_chunk(chunk_index: int):
         "reason":       reason,
         "total_chunks": total_chunks,
         "proof_steps":  _compute_tree_depth(total_chunks),
+        "proof_path": [
+            {"side": side, "hash": h.hex()[:16] + "..."}
+            for side, h in proof_path
+        ],
     }
+
+
+# ── Upgrade 1: Observable Verification Pipeline ──────────────────────────────
+
+@app.get("/api/verify-detailed")
+def verify_detailed(user_id: str = "anonymous"):
+    """
+    Stage-by-stage verification with timing per step.
+    Proves real computation happened — not a canned response.
+    """
+    import time as _time
+    from backend.crypto.merkle import build_model_merkle_tree
+
+    signer   = get_signer()
+    artifact = get_artifact()
+    model    = get_model()
+    state    = model.state_dict()
+    stages   = []
+
+    # ── Stage 1: BLAKE3 Weight Hash ───────────────────────────────────────────
+    t0 = _time.perf_counter()
+    from backend.crypto.hasher import hash_model_weights, compare_hashes
+    expected_hash = artifact["metadata"]["model_hash"]
+    actual_hash   = hash_model_weights(state)
+    hash_ok       = compare_hashes(actual_hash, expected_hash)
+    t1 = _time.perf_counter()
+
+    stages.append({
+        "stage":    "hash_check",
+        "label":    "BLAKE3 Weight Hash",
+        "status":   "pass" if hash_ok else "fail",
+        "expected": expected_hash[:24] + "...",
+        "actual":   actual_hash[:24] + "...",
+        "time_ms":  round((t1 - t0) * 1000, 2),
+    })
+
+    # ── Stage 2: Merkle Root Verification ─────────────────────────────────────
+    t0 = _time.perf_counter()
+    new_tree    = build_model_merkle_tree(state, signer.chunk_size)
+    stored_root = artifact["merkle_tree"]["root"]
+    merkle_ok   = compare_hashes(new_tree.root_hex, stored_root)
+
+    dirty_chunks = []
+    if not merkle_ok:
+        stored_leaves = [bytes.fromhex(h) for h in artifact["merkle_tree"]["leaf_hashes"]]
+        dirty_chunks  = [
+            i for i, (old, new) in enumerate(zip(stored_leaves, new_tree.leaf_hashes))
+            if old != new
+        ]
+    t1 = _time.perf_counter()
+    total_chunks = artifact["merkle_tree"]["chunk_count"]
+
+    stages.append({
+        "stage":         "merkle_check",
+        "label":         "Merkle Root Verification",
+        "status":        "pass" if merkle_ok else "fail",
+        "expected_root": stored_root[:24] + "...",
+        "actual_root":   new_tree.root_hex[:24] + "...",
+        "dirty_chunks":  dirty_chunks,
+        "total_chunks":  total_chunks,
+        "time_ms":       round((t1 - t0) * 1000, 2),
+    })
+
+    # ── Stage 3: Threshold Signature (2-of-3) ────────────────────────────────
+    t0 = _time.perf_counter()
+    public_keys = {
+        sid: bytes.fromhex(pk)
+        for sid, pk in artifact["public_keys"].items()
+    }
+    sig_valid, sig_reason = signer.tss.verify_threshold_signature(
+        artifact["threshold_signature"], public_keys,
+    )
+    t1 = _time.perf_counter()
+
+    stages.append({
+        "stage":         "signature_check",
+        "label":         "Threshold Signature (2-of-3)",
+        "status":        "pass" if sig_valid else "fail",
+        "valid_signers": artifact.get("signed_by", []),
+        "threshold":     artifact["metadata"].get("threshold", "2-of-3"),
+        "time_ms":       round((t1 - t0) * 1000, 2),
+    })
+
+    # ── Stage 4: Policy Engine ────────────────────────────────────────────────
+    t0 = _time.perf_counter()
+    policy  = PolicyEngine(PolicyConfig(require_signed=True, minimum_signers=2))
+    allowed, violations = policy.evaluate(artifact, get_ledger())
+    t1 = _time.perf_counter()
+
+    stages.append({
+        "stage":         "policy_check",
+        "label":         "Policy Engine",
+        "status":        "pass" if allowed else "fail",
+        "rules_checked": 8,
+        "violations":    [{"rule": v.rule, "reason": v.reason} for v in violations],
+        "time_ms":       round((t1 - t0) * 1000, 2),
+    })
+
+    # ── Overall ───────────────────────────────────────────────────────────────
+    overall = "VERIFIED" if all(s["status"] == "pass" for s in stages) else "REJECTED"
+    total_ms = round(sum(s["time_ms"] for s in stages), 2)
+
+    # Record in ledger
+    ledger = get_ledger()
+    ledger.record_verification(artifact, overall == "VERIFIED",
+        f"Detailed verification: {overall} in {total_ms}ms")
+
+    return {
+        "overall_status": overall,
+        "stages":         stages,
+        "total_time_ms":  total_ms,
+        "user_id":        user_id,
+    }
+
+
+# ── Upgrade 2: Merkle Diff ───────────────────────────────────────────────────
+
+class MerkleDiffRequest(BaseModel):
+    attack_type: str   = "modify_weights"
+    intensity:   float = 1.0
+
+@app.post("/api/merkle-diff")
+def merkle_diff(req: MerkleDiffRequest):
+    """
+    Compare clean model's Merkle tree against a tampered version.
+    Returns which chunks differ — for the diff visualization.
+    """
+    from backend.crypto.merkle import build_model_merkle_tree
+
+    signer   = get_signer()
+    artifact = get_artifact()
+    model    = get_model()
+
+    # Build tampered state
+    tampered_state = copy.deepcopy(model.state_dict())
+    n_corrupt = max(1, int(req.intensity * 5))
+
+    with torch.no_grad():
+        keys = list(tampered_state.keys())
+        for i in range(min(n_corrupt, len(keys))):
+            tampered_state[keys[i]].flatten()[0] += 999.0 * req.intensity
+
+    # Build trees
+    clean_tree    = build_model_merkle_tree(model.state_dict(), signer.chunk_size)
+    tampered_tree = build_model_merkle_tree(tampered_state, signer.chunk_size)
+
+    # Find dirty chunks
+    dirty = []
+    for i, (c, t) in enumerate(zip(clean_tree.leaf_hashes, tampered_tree.leaf_hashes)):
+        if c != t:
+            dirty.append(i)
+
+    return {
+        "expected_root":      clean_tree.root_hex[:24] + "...",
+        "actual_root":        tampered_tree.root_hex[:24] + "...",
+        "expected_root_full": clean_tree.root_hex,
+        "actual_root_full":   tampered_tree.root_hex,
+        "match":              len(dirty) == 0,
+        "dirty_chunks":       dirty,
+        "total_chunks":       clean_tree.chunk_count,
+        "expected_leaf_hashes": [h.hex()[:16] for h in clean_tree.leaf_hashes[:64]],
+        "actual_leaf_hashes":   [h.hex()[:16] for h in tampered_tree.leaf_hashes[:64]],
+        "attack_type":        req.attack_type,
+        "intensity":          req.intensity,
+    }
+
+
+# ── Upgrade 3: Model Registry ────────────────────────────────────────────────
+
+@app.get("/api/models")
+def get_models():
+    """
+    Return registered models with status derived from the ledger.
+    No separate database — everything comes from the chain.
+    """
+    ledger  = get_ledger()
+    entries = ledger.to_dict()
+
+    # Group entries by model_name
+    models = {}
+    for entry in entries:
+        name = entry["model_name"]
+        if name not in models:
+            models[name] = {
+                "model_name":          name,
+                "artifact_id":         entry["artifact_id"],
+                "latest_status":       "UNKNOWN",
+                "last_checked":        None,
+                "last_checked_by":     "system",
+                "total_verifications": 0,
+                "total_rejections":    0,
+                "total_attacks":       0,
+                "history":             [],
+            }
+
+        m = models[name]
+        evt = entry["event_type"]
+
+        if evt == "VERIFIED":
+            m["total_verifications"] += 1
+            m["latest_status"]   = "VERIFIED"
+            m["last_checked"]    = entry["timestamp"]
+            m["last_checked_by"] = entry.get("extra", {}).get("user_id", "system")
+
+        elif evt == "REJECTED":
+            m["total_rejections"] += 1
+            m["latest_status"]   = "REJECTED"
+            m["last_checked"]    = entry["timestamp"]
+            m["last_checked_by"] = entry.get("extra", {}).get("user_id", "system")
+
+        elif evt == "ATTACK_SIMULATED":
+            m["total_attacks"] += 1
+            if entry.get("extra", {}).get("detected"):
+                m["latest_status"] = "COMPROMISED"
+
+        elif evt == "SIGNED":
+            m["latest_status"] = "VERIFIED"
+            m["last_checked"]  = entry["timestamp"]
+
+        m["history"].append({
+            "event_type": evt,
+            "timestamp":  entry["timestamp"],
+            "user_id":    entry.get("extra", {}).get("user_id", "system"),
+            "details":    entry.get("extra", {}),
+        })
+
+    return list(models.values())
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────

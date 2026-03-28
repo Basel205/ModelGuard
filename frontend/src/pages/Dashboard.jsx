@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
-import { Shield, CheckCircle, XCircle, Activity, Lock, GitBranch, Key, AlertTriangle } from 'lucide-react'
+import { Shield, Activity, Lock, GitBranch, Key } from 'lucide-react'
 import axios from 'axios'
+import VerificationPipeline from '../components/VerificationPipeline.jsx'
 
 import config from '../config.js'
 const API = config.API
@@ -43,34 +44,11 @@ function StatCard({ label, value, sub, accent = 'green', icon: Icon }) {
   )
 }
 
-function CheckRow({ label, valid, detail }) {
-  return (
-    <div style={{
-      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      padding: '12px 0', borderBottom: '1px solid var(--border)',
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-        {valid
-          ? <CheckCircle size={14} color="var(--accent-green)" />
-          : <XCircle    size={14} color="var(--accent-red)" />
-        }
-        <span style={{ fontFamily: 'var(--font-mono)', fontSize: '12px' }}>{label}</span>
-      </div>
-      <span style={{
-        fontSize: '11px', fontFamily: 'var(--font-mono)',
-        color: valid ? 'var(--accent-green)' : 'var(--accent-red)',
-      }}>
-        {detail}
-      </span>
-    </div>
-  )
-}
-
 export default function Dashboard() {
-  const [status,   setStatus]   = useState(null)
-  const [verify,   setVerify]   = useState(null)
-  const [loading,  setLoading]  = useState(true)
-  const [verifying,setVerifying]= useState(false)
+  const [status,     setStatus]     = useState(null)
+  const [pipeline,   setPipeline]   = useState(null)
+  const [loading,    setLoading]    = useState(true)
+  const [verifying,  setVerifying]  = useState(false)
 
   useEffect(() => {
     axios.get(`${API}/api/status`)
@@ -81,11 +59,19 @@ export default function Dashboard() {
 
   const runVerify = async () => {
     setVerifying(true)
+    setPipeline(null)
     try {
-      const r = await axios.get(`${API}/api/verify`)
-      setVerify(r.data)
+      const r = await axios.get(`${API}/api/verify-detailed`)
+      setPipeline(r.data)
     } catch(e) {
-      setVerify({ valid: false, reason: 'API error' })
+      setPipeline({
+        overall_status: 'REJECTED',
+        stages: [{
+          stage: 'error', label: 'API Error',
+          status: 'fail', time_ms: 0,
+        }],
+        total_time_ms: 0,
+      })
     } finally {
       setVerifying(false)
     }
@@ -158,11 +144,11 @@ export default function Dashboard() {
       {/* Two column layout */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
 
-        {/* Verification panel */}
+        {/* Verification pipeline */}
         <div className="card">
           <div className="section-header">
             <span className="prefix">//</span>
-            <h2>Live Verification</h2>
+            <h2>Observable Verification Pipeline</h2>
           </div>
 
           <button
@@ -174,30 +160,7 @@ export default function Dashboard() {
             {verifying ? <><div className="spinner" /> VERIFYING...</> : '▶ RUN VERIFICATION'}
           </button>
 
-          {verify && (
-            <div style={{ animation: 'slideIn 0.3s ease' }}>
-              <div style={{
-                padding: '12px', marginBottom: '16px',
-                background: verify.valid ? '#00ff8810' : '#ff335510',
-                border: `1px solid ${verify.valid ? 'var(--accent-green)' : 'var(--accent-red)'}`,
-                borderRadius: '3px',
-                fontFamily: 'var(--font-mono)', fontSize: '12px',
-                color: verify.valid ? 'var(--accent-green)' : 'var(--accent-red)',
-              }}>
-                {verify.valid ? '✓' : '✗'} {verify.reason}
-              </div>
-
-              <CheckRow label="Model Hash"           valid={verify.hash_valid}      detail={verify.hash_valid      ? 'MATCH'   : 'MISMATCH'} />
-              <CheckRow label="Merkle Root"          valid={verify.merkle_valid}    detail={verify.merkle_valid    ? 'VALID'   : 'TAMPERED'} />
-              <CheckRow label="Threshold Signatures" valid={verify.threshold_valid} detail={verify.threshold_valid ? '2-OF-3'  : 'INVALID'}  />
-
-              {verify.dirty_chunks?.length > 0 && (
-                <div style={{ marginTop: '12px', padding: '10px', background: '#ff335510', borderRadius: '3px', fontSize: '11px', color: 'var(--accent-red)', fontFamily: 'var(--font-mono)' }}>
-                  ⚠ Dirty chunks: [{verify.dirty_chunks.join(', ')}]
-                </div>
-              )}
-            </div>
-          )}
+          <VerificationPipeline data={pipeline} />
         </div>
 
         {/* System info */}

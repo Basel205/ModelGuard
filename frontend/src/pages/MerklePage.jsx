@@ -1,17 +1,22 @@
 import { useEffect, useState } from 'react'
-import { GitBranch, CheckCircle, XCircle, Search } from 'lucide-react'
+import { GitBranch, CheckCircle, XCircle, Search, AlertTriangle, Zap } from 'lucide-react'
 import axios from 'axios'
 
 import config from '../config.js'
 const API = config.API
 
 export default function MerklePage() {
-  const [merkle,   setMerkle]   = useState(null)
-  const [loading,  setLoading]  = useState(true)
-  const [chunkIdx, setChunkIdx] = useState('')
-  const [result,   setResult]   = useState(null)
-  const [checking, setChecking] = useState(false)
+  const [merkle,      setMerkle]      = useState(null)
+  const [loading,     setLoading]     = useState(true)
+  const [chunkIdx,    setChunkIdx]    = useState('')
+  const [result,      setResult]      = useState(null)
+  const [checking,    setChecking]    = useState(false)
   const [highlighted, setHighlighted] = useState(null)
+
+  // Diff state
+  const [diffData,    setDiffData]    = useState(null)
+  const [diffing,     setDiffing]     = useState(false)
+  const [intensity,   setIntensity]   = useState(1.0)
 
   useEffect(() => {
     axios.get(`${API}/api/merkle`)
@@ -33,6 +38,22 @@ export default function MerklePage() {
     }
   }
 
+  const runDiff = async () => {
+    setDiffing(true)
+    setDiffData(null)
+    try {
+      const r = await axios.post(`${API}/api/merkle-diff`, {
+        attack_type: 'modify_weights',
+        intensity,
+      })
+      setDiffData(r.data)
+    } catch(e) {
+      console.error('Diff failed', e)
+    } finally {
+      setDiffing(false)
+    }
+  }
+
   if (loading) return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: 'var(--text-secondary)' }}>
       <div className="spinner" /> Loading Merkle tree...
@@ -45,6 +66,7 @@ export default function MerklePage() {
 
   // Show first 64 leaves visually
   const displayLeaves = leaves.slice(0, 64)
+  const dirtySet = new Set(diffData?.dirty_chunks || [])
 
   return (
     <div style={{ animation: 'slideIn 0.3s ease' }}>
@@ -69,21 +91,42 @@ export default function MerklePage() {
             <h2>Merkle Root</h2>
           </div>
 
-          {/* Root */}
+          {/* Root comparison */}
           <div style={{ textAlign: 'center', marginBottom: '24px' }}>
             <div style={{
               display: 'inline-block',
               padding: '10px 20px',
-              background: '#00ff8815',
-              border: '1px solid var(--accent-green)',
+              background: diffData && !diffData.match ? '#ff335515' : '#00ff8815',
+              border: `1px solid ${diffData && !diffData.match ? 'var(--accent-red)' : 'var(--accent-green)'}`,
               borderRadius: '3px',
               fontFamily: 'var(--font-mono)',
               fontSize: '11px',
-              color: 'var(--accent-green)',
-              animation: 'pulse-green 3s infinite',
+              color: diffData && !diffData.match ? 'var(--accent-red)' : 'var(--accent-green)',
+              animation: diffData && !diffData.match ? 'pulse-red 3s infinite' : 'pulse-green 3s infinite',
             }}>
               ROOT: {merkle?.root?.slice(0, 24)}...
             </div>
+
+            {/* Show tampered root when diff is active */}
+            {diffData && !diffData.match && (
+              <div style={{ marginTop: '12px', animation: 'slideIn 0.3s ease' }}>
+                <div style={{ fontSize: '9px', color: 'var(--text-dim)', fontFamily: 'var(--font-mono)', marginBottom: '4px', letterSpacing: '0.1em' }}>
+                  VS TAMPERED ROOT
+                </div>
+                <div style={{
+                  display: 'inline-block',
+                  padding: '8px 16px',
+                  background: '#ff335512',
+                  border: '1px solid #ff335540',
+                  borderRadius: '3px',
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: '10px',
+                  color: 'var(--accent-red)',
+                }}>
+                  {diffData.actual_root}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Visual tree connector */}
@@ -120,42 +163,66 @@ export default function MerklePage() {
             </div>
           </div>
 
-          {/* Leaf grid */}
+          {/* Leaf grid with diff overlay */}
           <div className="section-header">
             <span className="prefix">//</span>
             <h2>Leaf Nodes (first 64 of {chunkCount})</h2>
+            {diffData && (
+              <span className="badge badge-red" style={{ marginLeft: 'auto', fontSize: '9px' }}>
+                {diffData.dirty_chunks.length} DIRTY
+              </span>
+            )}
           </div>
 
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
             {displayLeaves.map((hash, i) => {
+              const isDirty       = dirtySet.has(i)
               const isHighlighted = highlighted === i
               const isValid       = result?.valid
+
+              let bgColor, borderColor, textColor, anim
+              if (isDirty) {
+                bgColor     = 'var(--accent-red)'
+                borderColor = 'var(--accent-red)'
+                textColor   = '#000'
+                anim        = 'pulse-red 1.5s infinite'
+              } else if (diffData) {
+                bgColor     = '#00ff8840'
+                borderColor = '#00ff8860'
+                textColor   = '#000'
+                anim        = 'none'
+              } else if (isHighlighted) {
+                bgColor     = isValid ? 'var(--accent-green)' : 'var(--accent-red)'
+                borderColor = isValid ? 'var(--accent-green)' : 'var(--accent-red)'
+                textColor   = '#000'
+                anim        = isValid ? 'pulse-green 1s infinite' : 'pulse-red 1s infinite'
+              } else {
+                bgColor     = '#00ff8820'
+                borderColor = '#00ff8840'
+                textColor   = 'var(--accent-green)'
+                anim        = 'none'
+              }
+
               return (
                 <div
                   key={i}
-                  title={`Chunk ${i}: ${hash.slice(0, 16)}...`}
+                  title={`Chunk ${i}: ${hash.slice(0, 16)}...${isDirty ? ' [TAMPERED]' : ''}`}
                   style={{
-                    width:        '28px',
-                    height:       '28px',
-                    borderRadius: '2px',
-                    background:   isHighlighted
-                      ? (isValid ? 'var(--accent-green)' : 'var(--accent-red)')
-                      : '#00ff8820',
-                    border: `1px solid ${isHighlighted
-                      ? (isValid ? 'var(--accent-green)' : 'var(--accent-red)')
-                      : '#00ff8840'}`,
-                    cursor:    'pointer',
-                    transition: 'all 0.2s',
-                    animation:  isHighlighted
-                      ? (isValid ? 'pulse-green 1s infinite' : 'pulse-red 1s infinite')
-                      : 'none',
-                    display:    'flex',
-                    alignItems: 'center',
+                    width:          '28px',
+                    height:         '28px',
+                    borderRadius:   '2px',
+                    background:     bgColor,
+                    border:         `1px solid ${borderColor}`,
+                    cursor:         'pointer',
+                    transition:     'all 0.2s',
+                    animation:      anim,
+                    display:        'flex',
+                    alignItems:     'center',
                     justifyContent: 'center',
-                    fontSize:   '8px',
-                    fontFamily: 'var(--font-mono)',
-                    color:      isHighlighted ? '#000' : 'var(--accent-green)',
-                    fontWeight: '700',
+                    fontSize:       '8px',
+                    fontFamily:     'var(--font-mono)',
+                    color:          textColor,
+                    fontWeight:     '700',
                   }}
                   onClick={() => { setChunkIdx(String(i)); setHighlighted(i) }}
                 >
@@ -165,13 +232,96 @@ export default function MerklePage() {
             })}
           </div>
 
+          {/* Diff summary */}
+          {diffData && (
+            <div style={{
+              marginTop: '16px',
+              padding: '12px',
+              background: '#ff335510',
+              border: '1px solid #ff335530',
+              borderRadius: '4px',
+              fontFamily: 'var(--font-mono)',
+              fontSize: '11px',
+              animation: 'slideIn 0.3s ease',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                <AlertTriangle size={14} color="var(--accent-red)" />
+                <span style={{ color: 'var(--accent-red)', fontWeight: '600' }}>
+                  TAMPER DETECTED
+                </span>
+              </div>
+              <div style={{ color: 'var(--text-secondary)', fontSize: '10px' }}>
+                {diffData.dirty_chunks.length} of {diffData.total_chunks} chunks corrupted
+                ({(diffData.dirty_chunks.length / diffData.total_chunks * 100).toFixed(2)}%)
+              </div>
+              <div style={{ color: 'var(--text-dim)', fontSize: '10px', marginTop: '4px' }}>
+                Dirty indices: [{diffData.dirty_chunks.slice(0, 10).join(', ')}
+                {diffData.dirty_chunks.length > 10 ? ', ...' : ''}]
+              </div>
+            </div>
+          )}
+
           <div style={{ marginTop: '12px', fontSize: '10px', color: 'var(--text-dim)', fontFamily: 'var(--font-mono)' }}>
             Click any leaf to select it for verification →
           </div>
         </div>
 
-        {/* Chunk verifier */}
+        {/* Right sidebar */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+
+          {/* Diff control panel */}
+          <div className="card">
+            <div className="section-header">
+              <span className="prefix">//</span>
+              <h2>Tamper Diff</h2>
+            </div>
+
+            <div style={{ marginBottom: '12px', fontSize: '11px', color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}>
+              Compare clean vs tampered model trees
+            </div>
+
+            <div style={{ marginBottom: '12px' }}>
+              <label style={{ fontSize: '10px', color: 'var(--text-dim)', fontFamily: 'var(--font-mono)', display: 'block', marginBottom: '6px' }}>
+                ATTACK INTENSITY: {intensity.toFixed(1)}
+              </label>
+              <input
+                type="range"
+                min="0.1"
+                max="3.0"
+                step="0.1"
+                value={intensity}
+                onChange={e => setIntensity(parseFloat(e.target.value))}
+                style={{
+                  width: '100%',
+                  accentColor: 'var(--accent-red)',
+                }}
+              />
+            </div>
+
+            <button
+              className="btn btn-danger"
+              onClick={runDiff}
+              disabled={diffing}
+              style={{ width: '100%', justifyContent: 'center' }}
+            >
+              {diffing
+                ? <><div className="spinner" /> COMPUTING...</>
+                : <><Zap size={12} /> COMPARE TREES</>
+              }
+            </button>
+
+            {diffData && (
+              <button
+                className="btn"
+                onClick={() => setDiffData(null)}
+                style={{ width: '100%', justifyContent: 'center', marginTop: '8px', fontSize: '10px' }}
+              >
+                CLEAR DIFF
+              </button>
+            )}
+          </div>
+
+          {/* Chunk verifier */}
           <div className="card">
             <div className="section-header">
               <span className="prefix">//</span>
@@ -246,6 +396,18 @@ export default function MerklePage() {
                     <span style={{ color: 'var(--text-primary)' }}>{v}</span>
                   </div>
                 ))}
+
+                {/* Proof path animation */}
+                {result.proof_path && (
+                  <div style={{ marginTop: '12px', borderTop: '1px solid var(--border)', paddingTop: '10px' }}>
+                    <div style={{ fontSize: '9px', color: 'var(--text-dim)', fontFamily: 'var(--font-mono)', letterSpacing: '0.1em', marginBottom: '8px' }}>
+                      PROOF PATH (O(log N))
+                    </div>
+                    {result.proof_path.map((step, i) => (
+                      <ProofStep key={i} step={step} index={i} total={result.proof_path.length} />
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -270,6 +432,48 @@ export default function MerklePage() {
           </div>
         </div>
       </div>
+    </div>
+  )
+}
+
+function ProofStep({ step, index, total }) {
+  const [visible, setVisible] = useState(false)
+
+  useEffect(() => {
+    const timer = setTimeout(() => setVisible(true), index * 200)
+    return () => clearTimeout(timer)
+  }, [index])
+
+  return (
+    <div style={{
+      display:    'flex',
+      alignItems: 'center',
+      gap:        '8px',
+      padding:    '4px 8px',
+      marginBottom: '4px',
+      background: '#00aaff08',
+      border:     '1px solid #00aaff20',
+      borderRadius: '2px',
+      fontFamily: 'var(--font-mono)',
+      fontSize:   '9px',
+      opacity:    visible ? 1 : 0,
+      transform:  visible ? 'translateX(0)' : 'translateX(-10px)',
+      transition: 'all 0.3s ease',
+    }}>
+      <span style={{ color: 'var(--accent-blue)', fontWeight: '700', minWidth: '16px' }}>
+        L{index}
+      </span>
+      <span style={{ color: 'var(--text-dim)' }}>
+        {step.side === 'right' ? '→' : '←'}
+      </span>
+      <span style={{ color: 'var(--text-secondary)' }}>
+        {step.hash}
+      </span>
+      {index === total - 1 && (
+        <span style={{ marginLeft: 'auto', color: 'var(--accent-green)', fontWeight: '600' }}>
+          = ROOT
+        </span>
+      )}
     </div>
   )
 }

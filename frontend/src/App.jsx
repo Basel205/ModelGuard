@@ -1,17 +1,19 @@
 import { Routes, Route, NavLink, useLocation } from 'react-router-dom'
-import { Shield, GitBranch, Zap, Key, BookOpen, Activity } from 'lucide-react'
-import Dashboard   from './pages/Dashboard.jsx'
-import MerklePage  from './pages/MerklePage.jsx'
-import AttackPage  from './pages/AttackPage.jsx'
-import ShamirPage  from './pages/ShamirPage.jsx'
-import LedgerPage  from './pages/LedgerPage.jsx'
+import { Shield, GitBranch, Zap, Key, BookOpen, Activity, Users } from 'lucide-react'
+import Dashboard    from './pages/Dashboard.jsx'
+import MerklePage   from './pages/MerklePage.jsx'
+import AttackPage   from './pages/AttackPage.jsx'
+import ShamirPage   from './pages/ShamirPage.jsx'
+import LedgerPage   from './pages/LedgerPage.jsx'
+import RegistryPage from './pages/RegistryPage.jsx'
 
 const NAV_ITEMS = [
-  { to: '/',        icon: Activity,   label: 'Dashboard' },
-  { to: '/merkle',  icon: GitBranch,  label: 'Merkle Tree' },
-  { to: '/attacks', icon: Zap,        label: 'Attack Sim' },
-  { to: '/shamir',  icon: Key,        label: 'Shamir SSS' },
-  { to: '/ledger',  icon: BookOpen,   label: 'Ledger' },
+  { to: '/',         icon: Activity,   label: 'Dashboard' },
+  { to: '/merkle',   icon: GitBranch,  label: 'Merkle Tree' },
+  { to: '/attacks',  icon: Zap,        label: 'Attack Sim' },
+  { to: '/shamir',   icon: Key,        label: 'Shamir SSS' },
+  { to: '/ledger',   icon: BookOpen,   label: 'Ledger' },
+  { to: '/registry', icon: Users,      label: 'Registry' },
 ]
 
 export default function App() {
@@ -104,11 +106,12 @@ export default function App() {
       {/* Main content */}
       <main style={{ flex: 1, padding: '32px', overflowY: 'auto' }}>
         <Routes>
-          <Route path="/"        element={<Dashboard />} />
-          <Route path="/merkle"  element={<MerklePage />} />
-          <Route path="/attacks" element={<AttackPage />} />
-          <Route path="/shamir"  element={<ShamirPage />} />
-          <Route path="/ledger"  element={<LedgerPage />} />
+          <Route path="/"         element={<Dashboard />} />
+          <Route path="/merkle"   element={<MerklePage />} />
+          <Route path="/attacks"  element={<AttackPage />} />
+          <Route path="/shamir"   element={<ShamirPage />} />
+          <Route path="/ledger"   element={<LedgerPage />} />
+          <Route path="/registry" element={<RegistryPage />} />
         </Routes>
       </main>
     </div>

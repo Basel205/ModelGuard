@@ -191,3 +191,37 @@ body::before {
   color:       var(--accent-green);
   font-weight: 700;
 }
+
+/* Pipeline stage animations */
+.pipeline-stage {
+  position: relative;
+}
+
+/* Timeline connector for registry */
+.timeline-dot {
+  width:        8px;
+  height:       8px;
+  border-radius: 50%;
+  flex-shrink:  0;
+}
+
+/* Range slider styling */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  outline: none;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width:  14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent-red);
+  cursor: pointer;
+  border: 2px solid var(--bg-primary);
+  box-shadow: 0 0 6px var(--accent-red);
+}
